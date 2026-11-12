@@ -4,7 +4,6 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
-  onAuthStateChanged,
   User,
 } from 'firebase/auth';
 import {
@@ -15,19 +14,72 @@ import {
   onSnapshot,
   setDoc,
   deleteDoc,
-  updateDoc,
+  getDocs,
+  writeBatch,
 } from 'firebase/firestore';
+import { SarprasItem, LoanRequest } from '../types';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 // Initialize Firebase App
 export const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// CRITICAL: Must use firestoreDatabaseId
+// Initialize Firestore with Database ID from config
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Test Connection Helper as mandated by skill
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+export interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  };
+}
+
+export function handleFirestoreError(
+  error: unknown,
+  operationType: OperationType,
+  path: string | null
+) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo:
+        auth.currentUser?.providerData?.map((provider) => ({
+          providerId: provider.providerId,
+          email: provider.email,
+        })) || [],
+    },
+    operationType,
+    path,
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+}
+
+// Test Connection Helper
 export async function testFirestoreConnection(): Promise<boolean> {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
@@ -43,7 +95,105 @@ export async function testFirestoreConnection(): Promise<boolean> {
   }
 }
 
-// Google Sign-In helper (without CMD or PowerShell)
+// Real-time Firestore Listeners
+export function subscribeToSarprasItems(
+  onUpdate: (items: SarprasItem[]) => void,
+  onError?: (err: any) => void
+) {
+  const colRef = collection(db, 'sarpras_items');
+  return onSnapshot(
+    colRef,
+    (snapshot) => {
+      if (!snapshot.empty) {
+        const itemsList: SarprasItem[] = [];
+        snapshot.forEach((docSnap) => {
+          itemsList.push(docSnap.data() as SarprasItem);
+        });
+        onUpdate(itemsList);
+      }
+    },
+    (err) => {
+      handleFirestoreError(err, OperationType.GET, 'sarpras_items');
+      if (onError) onError(err);
+    }
+  );
+}
+
+export function subscribeToSarprasLoans(
+  onUpdate: (loans: LoanRequest[]) => void,
+  onError?: (err: any) => void
+) {
+  const colRef = collection(db, 'sarpras_loans');
+  return onSnapshot(
+    colRef,
+    (snapshot) => {
+      if (!snapshot.empty) {
+        const loansList: LoanRequest[] = [];
+        snapshot.forEach((docSnap) => {
+          loansList.push(docSnap.data() as LoanRequest);
+        });
+        onUpdate(loansList);
+      }
+    },
+    (err) => {
+      handleFirestoreError(err, OperationType.GET, 'sarpras_loans');
+      if (onError) onError(err);
+    }
+  );
+}
+
+// Firestore Writes
+export async function saveItemToFirestore(item: SarprasItem): Promise<void> {
+  try {
+    await setDoc(doc(db, 'sarpras_items', item.id), item);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, `sarpras_items/${item.id}`);
+  }
+}
+
+export async function deleteItemFromFirestore(itemId: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, 'sarpras_items', itemId));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `sarpras_items/${itemId}`);
+  }
+}
+
+export async function saveLoanToFirestore(loan: LoanRequest): Promise<void> {
+  try {
+    await setDoc(doc(db, 'sarpras_loans', loan.id), loan);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, `sarpras_loans/${loan.id}`);
+  }
+}
+
+// Seed initial mock data into Firestore if collection is empty
+export async function seedInitialFirestoreData(
+  items: SarprasItem[],
+  loans: LoanRequest[]
+): Promise<void> {
+  try {
+    const itemsCol = collection(db, 'sarpras_items');
+    const existingItems = await getDocs(itemsCol);
+
+    if (existingItems.empty) {
+      console.log('Seeding initial sarpras items to Cloud Firestore...');
+      const batch = writeBatch(db);
+      for (const itm of items) {
+        batch.set(doc(db, 'sarpras_items', itm.id), itm);
+      }
+      for (const ln of loans) {
+        batch.set(doc(db, 'sarpras_loans', ln.id), ln);
+      }
+      await batch.commit();
+      console.log('Initial data seeded successfully to Firestore!');
+    }
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, 'sarpras_items_seed');
+  }
+}
+
+// Google Auth Helpers
 export async function signInWithGoogle(): Promise<User | null> {
   try {
     const result = await signInWithPopup(auth, googleProvider);
@@ -54,7 +204,6 @@ export async function signInWithGoogle(): Promise<User | null> {
   }
 }
 
-// Sign-Out helper
 export async function logoutFirebase(): Promise<void> {
   try {
     await signOut(auth);

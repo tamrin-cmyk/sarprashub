@@ -1,11 +1,11 @@
 {
-  "projectId": "snappy-container-7rr5c",
-  "appId": "1:64347689771:web:3964e46bde3f5c0a37ab6e",
-  "apiKey": "AIzaSyCHUkTR5-Y8xaVUVgP6PNEENtsxUwahfbM",
-  "authDomain": "snappy-container-7rr5c.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-sarprashubsistem-28640f9a-dc59-4019-8cf7-a2e0d669e4f4",
-  "storageBucket": "snappy-container-7rr5c.firebasestorage.app",
-  "messagingSenderId": "64347689771",
+  "projectId": "sarprashub-79e88",
+  "appId": "1:3976826964:web:847ea34337d16734fc5dc1",
+  "apiKey": "AIzaSyDPo8bj6LxLFhspRFn_Hia2JRcMn6DNC40",
+  "authDomain": "sarprashub-79e88.firebaseapp.com",
+  "firestoreDatabaseId": "default",
+  "storageBucket": "sarprashub-79e88.firebasestorage.app",
+  "messagingSenderId": "3976826964",
   "measurementId": "",
   "oAuthClientId": "64347689771-s5m5579svdjih1jbi6c7pq8t1d24u4tb.apps.googleusercontent.com",
   "recaptchaSiteKey": ""

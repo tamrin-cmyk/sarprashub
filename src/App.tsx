@@ -28,6 +28,14 @@ import { AdminLoginModal } from './components/AdminLoginModal';
 import { ChangeAdminPasswordModal } from './components/ChangeAdminPasswordModal';
 import { getAdminSession, saveAdminSession, clearAdminSession } from './utils/auth';
 import {
+  saveItemToFirestore,
+  deleteItemFromFirestore,
+  saveLoanToFirestore,
+  subscribeToSarprasItems,
+  subscribeToSarprasLoans,
+  seedInitialFirestoreData,
+} from './utils/firebase';
+import {
   CheckCircle2,
   AlertTriangle,
   Bell,
@@ -113,6 +121,29 @@ export default function App() {
     localStorage.setItem('sarpras_notifications', JSON.stringify(notifications));
   }, [notifications]);
 
+  // Real-time Cloud Firestore synchronization
+  useEffect(() => {
+    // Seed initial mock data if cloud collection is new
+    seedInitialFirestoreData(INITIAL_ITEMS, INITIAL_LOANS);
+
+    const unsubItems = subscribeToSarprasItems((cloudItems) => {
+      if (cloudItems && cloudItems.length > 0) {
+        setItems(cloudItems);
+      }
+    });
+
+    const unsubLoans = subscribeToSarprasLoans((cloudLoans) => {
+      if (cloudLoans && cloudLoans.length > 0) {
+        setLoans(cloudLoans);
+      }
+    });
+
+    return () => {
+      unsubItems();
+      unsubLoans();
+    };
+  }, []);
+
   // Modal States
   const [isLoanModalOpen, setIsLoanModalOpen] = useState(false);
   const [preSelectedItem, setPreSelectedItem] = useState<SarprasItem | null>(null);
@@ -164,6 +195,7 @@ export default function App() {
   // Action: User Submits New Loan Request
   const handleAddNewLoan = (newLoan: LoanRequest) => {
     setLoans((prev) => [newLoan, ...prev]);
+    saveLoanToFirestore(newLoan);
 
     addNotification(
       'Pengajuan Peminjaman Berhasil',
@@ -193,22 +225,26 @@ export default function App() {
             itemPrev.map((itm) => {
               const matchedLoanItem = loan.items.find((li) => li.itemId === itm.id);
               if (matchedLoanItem) {
-                return {
+                const updatedItm = {
                   ...itm,
                   availableQuantity: Math.max(0, itm.availableQuantity - matchedLoanItem.quantity),
                 };
+                saveItemToFirestore(updatedItm);
+                return updatedItm;
               }
               return itm;
             })
           );
 
-          return {
+          const updatedLoan: LoanRequest = {
             ...loan,
             status: 'Disetujui',
             approvedBy: 'Admin Sarpras',
             approvedAt: `${new Date().toLocaleDateString('id-ID')} ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB`,
             adminNotes: adminNotes || loan.adminNotes,
           };
+          saveLoanToFirestore(updatedLoan);
+          return updatedLoan;
         }
         return loan;
       })
@@ -229,11 +265,13 @@ export default function App() {
       prev.map((loan) => {
         if (loan.id === loanId) {
           rejectedCode = loan.loanCode;
-          return {
+          const updatedLoan: LoanRequest = {
             ...loan,
             status: 'Ditolak',
             rejectionReason: reason,
           };
+          saveLoanToFirestore(updatedLoan);
+          return updatedLoan;
         }
         return loan;
       })
@@ -250,14 +288,17 @@ export default function App() {
   // Action: Mark as Handed Over (Sedang Dipinjam)
   const handleMarkHandover = (loanId: string) => {
     setLoans((prev) =>
-      prev.map((loan) =>
-        loan.id === loanId
-          ? {
-              ...loan,
-              status: 'Sedang Dipinjam',
-            }
-          : loan
-      )
+      prev.map((loan) => {
+        if (loan.id === loanId) {
+          const updatedLoan: LoanRequest = {
+            ...loan,
+            status: 'Sedang Dipinjam',
+          };
+          saveLoanToFirestore(updatedLoan);
+          return updatedLoan;
+        }
+        return loan;
+      })
     );
 
     addNotification(
@@ -277,23 +318,27 @@ export default function App() {
             itemPrev.map((itm) => {
               const matchedLoanItem = loan.items.find((li) => li.itemId === itm.id);
               if (matchedLoanItem) {
-                return {
+                const restoredItm = {
                   ...itm,
                   availableQuantity: Math.min(
                     itm.totalQuantity,
                     itm.availableQuantity + matchedLoanItem.quantity
                   ),
                 };
+                saveItemToFirestore(restoredItm);
+                return restoredItm;
               }
               return itm;
             })
           );
 
-          return {
+          const updatedLoan: LoanRequest = {
             ...loan,
             status: 'Selesai',
             returnedAt: `${new Date().toLocaleDateString('id-ID')} ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB`,
           };
+          saveLoanToFirestore(updatedLoan);
+          return updatedLoan;
         }
         return loan;
       })
@@ -309,6 +354,7 @@ export default function App() {
   // Action: Admin Master CRUD - Add Item
   const handleAddItem = (newItem: SarprasItem) => {
     setItems((prev) => [newItem, ...prev]);
+    saveItemToFirestore(newItem);
     showToast(
       'Aset Baru Ditambahkan',
       `Aset ${newItem.name} (${newItem.code}) berhasil disimpan ke master data.`,
@@ -319,6 +365,7 @@ export default function App() {
   // Action: Admin Master CRUD - Update Item
   const handleUpdateItem = (updatedItem: SarprasItem) => {
     setItems((prev) => prev.map((itm) => (itm.id === updatedItem.id ? updatedItem : itm)));
+    saveItemToFirestore(updatedItem);
     showToast(
       'Data Aset Diperbarui',
       `Informasi aset ${updatedItem.code} berhasil diperbarui.`,
@@ -329,6 +376,7 @@ export default function App() {
   // Action: Admin Master CRUD - Delete Item
   const handleDeleteItem = (itemId: string) => {
     setItems((prev) => prev.filter((itm) => itm.id !== itemId));
+    deleteItemFromFirestore(itemId);
     showToast('Aset Dihapus', 'Aset sarana prasarana telah dihapus dari data master.', 'warning');
   };
 
