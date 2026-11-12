@@ -1,0 +1,6 @@
+{
+  "name": "SarprasHub - Sistem Peminjaman Sarana Prasarana",
+  "description": "Aplikasi manajemen peminjaman sarana prasarana dan inventaris online dengan persetujuan admin, cetak kartu peminjaman PDF, dasbor ketersediaan, dan notifikasi real-time.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

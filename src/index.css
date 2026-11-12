@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #eef2f9;
+    color: #1e293b;
+    overflow-x: hidden;
+  }
+}
+
+/* Soft Neumorphic / Claymorphic Shadows matching the uploaded image */
+.clay-card {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 10px 28px -4px rgba(180, 195, 222, 0.35), 0 2px 8px -1px rgba(180, 195, 222, 0.15);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.clay-card:hover {
+  box-shadow: 0 14px 32px -4px rgba(170, 188, 218, 0.42), 0 4px 12px -1px rgba(170, 188, 218, 0.2);
+}
+
+.clay-sidebar {
+  background: #f0f4fa;
+  border-right: 1px solid rgba(218, 228, 243, 0.9);
+}
+
+.clay-button-active {
+  background: #e8f0fe;
+  color: #1d4ed8;
+  box-shadow: inset 0 1px 2px rgba(29, 78, 216, 0.08);
+}
+
+.clay-pill {
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* 3D Depth and Perspective Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.card-3d-tilt {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  transform: perspective(1000px) translateZ(0);
+}
+
+.card-3d-tilt:hover {
+  transform: perspective(1000px) translateY(-3px) translateZ(6px);
+  box-shadow: 0 18px 30px -8px rgba(160, 178, 210, 0.38);
+}
+
+/* Clean White Panels */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(220, 230, 245, 0.85);
+  box-shadow: 0 8px 24px -2px rgba(180, 195, 222, 0.25);
+}
+
+.glass-modal {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(205, 219, 238, 0.9);
+  box-shadow: 0 25px 50px -12px rgba(140, 160, 195, 0.35);
+}
+
+/* Pastel Lavender Background Mesh */
+.bg-gradient-mesh {
+  background-color: #eef2f9;
+  background-image: 
+    radial-gradient(at 10% 12%, rgba(219, 234, 254, 0.8) 0px, transparent 50%),
+    radial-gradient(at 88% 8%, rgba(237, 233, 254, 0.7) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(240, 249, 255, 0.6) 0px, transparent 60%),
+    radial-gradient(at 80% 85%, rgba(224, 231, 255, 0.7) 0px, transparent 50%),
+    radial-gradient(at 15% 90%, rgba(226, 232, 240, 0.6) 0px, transparent 50%);
+}
+
+.text-gradient-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 50%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-emerald {
+  background: linear-gradient(135deg, #059669 0%, #0d9488 50%, #0284c7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom Scrollbar for Light Theme */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.8);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.5);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.6);
+}
+
+/* Print View Styles */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}
