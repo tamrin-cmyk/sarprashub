@@ -1,0 +1,80 @@
+{
+  "entities": {
+    "SarprasItem": {
+      "title": "SarprasItem",
+      "description": "Item inventaris barang atau fasilitas ruangan",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["barang", "ruang"] },
+        "category": { "type": "string" },
+        "location": { "type": "string" },
+        "totalQuantity": { "type": "number" },
+        "availableQuantity": { "type": "number" },
+        "unit": { "type": "string" },
+        "condition": { "type": "string", "enum": ["Baik", "Rusak Ringan", "Dalam Perawatan"] },
+        "picName": { "type": "string" },
+        "picPhone": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "capacity": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["code", "name", "type", "category", "location", "totalQuantity", "availableQuantity"]
+    },
+    "LoanRequest": {
+      "title": "LoanRequest",
+      "description": "Permohonan dan riwayat sirkulasi peminjaman sarpras",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "loanCode": { "type": "string" },
+        "borrowerName": { "type": "string" },
+        "borrowerRole": { "type": "string" },
+        "borrowerNipOrId": { "type": "string" },
+        "borrowerPhone": { "type": "string" },
+        "borrowerEmail": { "type": "string" },
+        "departmentOrClass": { "type": "string" },
+        "purpose": { "type": "string" },
+        "status": { "type": "string", "enum": ["Menunggu Persetujuan", "Disetujui", "Ditolak", "Sedang Dipinjam", "Selesai"] },
+        "startDate": { "type": "string" },
+        "startTime": { "type": "string" },
+        "endDate": { "type": "string" },
+        "endTime": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["loanCode", "borrowerName", "borrowerPhone", "purpose", "status", "startDate", "endDate"]
+    },
+    "AppNotification": {
+      "title": "AppNotification",
+      "description": "Notifikasi sirkulasi sistem",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "read": { "type": "boolean" },
+        "loanCode": { "type": "string" }
+      },
+      "required": ["title", "message", "type"]
+    }
+  },
+  "firestore": {
+    "/sarpras_items/{itemId}": {
+      "schema": { "$ref": "#/entities/SarprasItem" },
+      "description": "Koleksi data master barang dan ruangan"
+    },
+    "/sarpras_loans/{loanId}": {
+      "schema": { "$ref": "#/entities/LoanRequest" },
+      "description": "Koleksi transaksi sirkulasi dan pengajuan"
+    },
+    "/sarpras_notifications/{notifId}": {
+      "schema": { "$ref": "#/entities/AppNotification" },
+      "description": "Koleksi notifikasi real-time"
+    }
+  }
+}

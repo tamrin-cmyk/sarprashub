@@ -1,0 +1,34 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Connection validation path
+    match /test/{testDoc} {
+      allow read, write: if true;
+    }
+
+    // 3. Sarpras Inventory Items
+    match /sarpras_items/{itemId} {
+      // Anyone can read available items to check availability
+      allow read: if true;
+      // Allow write for inventory management
+      allow write: if true;
+    }
+
+    // 4. Circulation & Loan Requests
+    match /sarpras_loans/{loanId} {
+      // Anyone can create and track their loan
+      allow read, create, update: if true;
+      allow delete: if false;
+    }
+
+    // 5. Notifications
+    match /sarpras_notifications/{notifId} {
+      allow read, write: if true;
+    }
+  }
+}

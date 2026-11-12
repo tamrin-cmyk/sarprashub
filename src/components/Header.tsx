@@ -8,6 +8,7 @@ import {
   UserCheck,
   Menu,
   Lock,
+  Download,
 } from 'lucide-react';
 import { AppNotification } from '../types';
 
@@ -108,6 +109,17 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <HelpCircle className="w-4 h-4" />
         </div>
+
+        {/* Direct ZIP Download button for GitHub & Firebase upload */}
+        <a
+          href="/sarprashub-project.zip"
+          download="sarprashub-project.zip"
+          title="Unduh seluruh source code proyek (ZIP siap upload GitHub & Firebase)"
+          className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 hover:text-blue-600 text-xs font-bold border border-slate-200/90 shadow-2xs transition-all cursor-pointer"
+        >
+          <Download className="w-3.5 h-3.5 text-blue-600" />
+          <span>Unduh ZIP</span>
+        </a>
 
         {/* Vivid Blue Button matching "+ Create Listing" in the image */}
         <button
