@@ -144,25 +144,36 @@ export const RoomManagement: React.FC<RoomManagementProps> = ({
       </div>
 
       {/* Rooms Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredRooms.map((room) => {
-          const isMaintenance = room.condition === 'Dalam Perawatan';
-          const isOccupied = !isMaintenance && room.availableQuantity === 0;
-          const isAvailable = !isMaintenance && room.availableQuantity > 0;
+      {filteredRooms.length === 0 ? (
+        <div className="clay-card p-12 text-center rounded-3xl border border-slate-200 space-y-4 bg-white/95">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+            <Building className="w-8 h-8" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900">Belum Ada Data Ruangan & Fasilitas</h3>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+            Basis data ruangan saat ini masih kosong agar dapat diisi secara manual. Tambahkan aula, laboratorium, atau ruang rapat baru melalui menu Data Inventaris dengan memilih tipe "Ruangan".
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredRooms.map((room) => {
+            const isMaintenance = room.condition === 'Dalam Perawatan';
+            const isOccupied = !isMaintenance && room.availableQuantity === 0;
+            const isAvailable = !isMaintenance && room.availableQuantity > 0;
 
-          // Find active loans using this room
-          const activeLoan = loans.find(
-            (l) =>
-              (l.status === 'Disetujui' || l.status === 'Sedang Dipinjam') &&
-              l.items.some((itm) => itm.itemId === room.id)
-          );
+            // Find active loans using this room
+            const activeLoan = loans.find(
+              (l) =>
+                (l.status === 'Disetujui' || l.status === 'Sedang Dipinjam') &&
+                l.items.some((itm) => itm.itemId === room.id)
+            );
 
-          return (
-            <div
-              key={room.id}
-              className="clay-card overflow-hidden flex flex-col justify-between hover:-translate-y-1 transition-all"
-            >
-              <div>
+            return (
+              <div
+                key={room.id}
+                className="clay-card overflow-hidden flex flex-col justify-between hover:-translate-y-1 transition-all"
+              >
+                <div>
                 {/* Photo & Badges */}
                 <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
                   <img
@@ -270,6 +281,7 @@ export const RoomManagement: React.FC<RoomManagementProps> = ({
           );
         })}
       </div>
+      )}
     </div>
   );
 };

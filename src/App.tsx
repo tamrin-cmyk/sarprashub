@@ -34,6 +34,7 @@ import {
   subscribeToSarprasItems,
   subscribeToSarprasLoans,
   seedInitialFirestoreData,
+  clearAllFirestoreData,
 } from './utils/firebase';
 import {
   CheckCircle2,
@@ -71,8 +72,16 @@ export default function App() {
   const [isAdminLoginModalOpen, setIsAdminLoginModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
-  // App Data with localStorage persistence
+  // App Data with localStorage persistence (starts empty so user can fill manually)
   const [items, setItems] = useState<SarprasItem[]>(() => {
+    // One-time manual wipe check for "kosongkan datanya agar diisi manual"
+    if (localStorage.getItem('sarpras_manual_mode_v2') !== 'active') {
+      localStorage.removeItem('sarpras_items');
+      localStorage.removeItem('sarpras_loans');
+      localStorage.removeItem('sarpras_notifications');
+      localStorage.setItem('sarpras_manual_mode_v2', 'active');
+      return [];
+    }
     const saved = localStorage.getItem('sarpras_items');
     if (saved) {
       try {
@@ -81,10 +90,13 @@ export default function App() {
         console.error('Failed to parse saved items', e);
       }
     }
-    return INITIAL_ITEMS;
+    return [];
   });
 
   const [loans, setLoans] = useState<LoanRequest[]>(() => {
+    if (localStorage.getItem('sarpras_manual_mode_v2') !== 'active') {
+      return [];
+    }
     const saved = localStorage.getItem('sarpras_loans');
     if (saved) {
       try {
@@ -93,10 +105,13 @@ export default function App() {
         console.error('Failed to parse saved loans', e);
       }
     }
-    return INITIAL_LOANS;
+    return [];
   });
 
   const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    if (localStorage.getItem('sarpras_manual_mode_v2') !== 'active') {
+      return [];
+    }
     const saved = localStorage.getItem('sarpras_notifications');
     if (saved) {
       try {
@@ -105,7 +120,7 @@ export default function App() {
         console.error('Failed to parse saved notifications', e);
       }
     }
-    return INITIAL_NOTIFICATIONS;
+    return [];
   });
 
   // Save to localStorage
@@ -121,19 +136,16 @@ export default function App() {
     localStorage.setItem('sarpras_notifications', JSON.stringify(notifications));
   }, [notifications]);
 
-  // Real-time Cloud Firestore synchronization
+  // Real-time Cloud Firestore synchronization (without auto mock seeding)
   useEffect(() => {
-    // Seed initial mock data if cloud collection is new
-    seedInitialFirestoreData(INITIAL_ITEMS, INITIAL_LOANS);
-
     const unsubItems = subscribeToSarprasItems((cloudItems) => {
-      if (cloudItems && cloudItems.length > 0) {
+      if (cloudItems) {
         setItems(cloudItems);
       }
     });
 
     const unsubLoans = subscribeToSarprasLoans((cloudLoans) => {
-      if (cloudLoans && cloudLoans.length > 0) {
+      if (cloudLoans) {
         setLoans(cloudLoans);
       }
     });
@@ -392,15 +404,37 @@ export default function App() {
     setIsLabelModalOpen(true);
   };
 
-  // Action: Reset Data
-  const handleResetData = () => {
+  // Action: Clear All Data (Empty database for manual entry)
+  const handleClearAllData = async () => {
     localStorage.removeItem('sarpras_items');
     localStorage.removeItem('sarpras_loans');
     localStorage.removeItem('sarpras_notifications');
+    localStorage.setItem('sarpras_manual_mode_v2', 'active');
+    setItems([]);
+    setLoans([]);
+    setNotifications([]);
+    await clearAllFirestoreData();
+    showToast(
+      'Data Berhasil Dikosongkan',
+      'Seluruh data lokal dan cloud Firestore telah dihapus bersih. Siap untuk diisi manual dari nol.',
+      'info'
+    );
+  };
+
+  // Action: Optional Seed Demo Data
+  const handleSeedDemoData = async () => {
+    localStorage.setItem('sarpras_items', JSON.stringify(INITIAL_ITEMS));
+    localStorage.setItem('sarpras_loans', JSON.stringify(INITIAL_LOANS));
+    localStorage.setItem('sarpras_notifications', JSON.stringify(INITIAL_NOTIFICATIONS));
     setItems(INITIAL_ITEMS);
     setLoans(INITIAL_LOANS);
     setNotifications(INITIAL_NOTIFICATIONS);
-    showToast('Data Direset', 'Semua data telah dikembalikan ke kondisi awal contoh.', 'info');
+    await seedInitialFirestoreData(INITIAL_ITEMS, INITIAL_LOANS);
+    showToast(
+      'Data Contoh Dimuat',
+      'Data demo/contoh sarpras dan permohonan berhasil dimuat ke sistem.',
+      'success'
+    );
   };
 
   // Action: Simulate new real-time notification
@@ -711,7 +745,9 @@ export default function App() {
               onRequireAdminAuth={handleRequireAdminAuth}
               onLogoutAdmin={handleLogoutAdmin}
               onOpenChangePassword={() => setIsChangePasswordModalOpen(true)}
-              onResetData={handleResetData}
+              onResetData={handleClearAllData}
+              onClearAllData={handleClearAllData}
+              onSeedDemoData={handleSeedDemoData}
               totalItems={items.length}
               totalLoans={loans.length}
             />

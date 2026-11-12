@@ -278,8 +278,19 @@ export const AdminMasterCrud: React.FC<AdminMasterCrudProps> = ({
             <tbody className="divide-y divide-slate-100 text-xs">
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-slate-500">
-                    Tidak ada aset yang ditemukan dengan kriteria saat ini.
+                  <td colSpan={6} className="py-14 text-center text-slate-500">
+                    <Package className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+                    <p className="font-bold text-slate-700 text-sm">Belum ada data inventaris sarpras</p>
+                    <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                      Master data masih kosong agar dapat diisi secara manual. Klik tombol di bawah untuk mendaftarkan barang atau ruangan pertama Anda.
+                    </p>
+                    <button
+                      onClick={handleOpenAddModal}
+                      className="mt-4 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all shadow-md shadow-purple-600/20 cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Tambah Aset Pertama</span>
+                    </button>
                   </td>
                 </tr>
               ) : (

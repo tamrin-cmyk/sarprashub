@@ -264,24 +264,30 @@ export const ItemCatalog: React.FC<ItemCatalogProps> = ({
       {filteredItems.length === 0 ? (
         <div className="glass-panel p-12 text-center rounded-3xl border border-slate-200 space-y-4 bg-white">
           <div className="w-16 h-16 mx-auto rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-            <Search className="w-8 h-8" />
+            {items.length === 0 ? <Package className="w-8 h-8" /> : <Search className="w-8 h-8" />}
           </div>
-          <h3 className="text-lg font-bold text-slate-900">Tidak ada inventaris yang cocok</h3>
+          <h3 className="text-lg font-bold text-slate-900">
+            {items.length === 0 ? 'Belum Ada Sarana Prasarana Terdaftar' : 'Tidak ada inventaris yang cocok'}
+          </h3>
           <p className="text-sm text-slate-500 max-w-md mx-auto">
-            Coba ubah kata kunci pencarian atau reset filter kategori, lokasi, dan status ketersediaan.
+            {items.length === 0
+              ? 'Basis data sarpras saat ini kosong agar dapat diisi secara manual oleh pihak pengelola. Silakan login sebagai Admin untuk mulai menambahkan barang atau ruangan.'
+              : 'Coba ubah kata kunci pencarian atau reset filter kategori, lokasi, dan status ketersediaan.'}
           </p>
-          <button
-            onClick={() => {
-              setSearchQuery('');
-              setSelectedCategory('all');
-              setSelectedLocation('all');
-              setSelectedAvailability('all');
-              setSelectedType('all');
-            }}
-            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
-          >
-            Bersihkan Pencarian
-          </button>
+          {items.length > 0 && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedCategory('all');
+                setSelectedLocation('all');
+                setSelectedAvailability('all');
+                setSelectedType('all');
+              }}
+              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+            >
+              Bersihkan Pencarian
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

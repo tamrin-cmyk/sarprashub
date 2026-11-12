@@ -23,8 +23,14 @@ import firebaseConfig from '../../firebase-applet-config.json';
 // Initialize Firebase App
 export const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firestore with Database ID from config
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+// Initialize Firestore with Database ID from config (handles "(default)", "default", or named DB)
+const rawDbId = firebaseConfig.firestoreDatabaseId;
+const dbId =
+  !rawDbId || rawDbId === 'default' || rawDbId === '(default)'
+    ? undefined
+    : rawDbId;
+
+export const db = dbId ? getFirestore(app, dbId) : getFirestore(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
@@ -104,13 +110,11 @@ export function subscribeToSarprasItems(
   return onSnapshot(
     colRef,
     (snapshot) => {
-      if (!snapshot.empty) {
-        const itemsList: SarprasItem[] = [];
-        snapshot.forEach((docSnap) => {
-          itemsList.push(docSnap.data() as SarprasItem);
-        });
-        onUpdate(itemsList);
-      }
+      const itemsList: SarprasItem[] = [];
+      snapshot.forEach((docSnap) => {
+        itemsList.push(docSnap.data() as SarprasItem);
+      });
+      onUpdate(itemsList);
     },
     (err) => {
       handleFirestoreError(err, OperationType.GET, 'sarpras_items');
@@ -127,13 +131,11 @@ export function subscribeToSarprasLoans(
   return onSnapshot(
     colRef,
     (snapshot) => {
-      if (!snapshot.empty) {
-        const loansList: LoanRequest[] = [];
-        snapshot.forEach((docSnap) => {
-          loansList.push(docSnap.data() as LoanRequest);
-        });
-        onUpdate(loansList);
-      }
+      const loansList: LoanRequest[] = [];
+      snapshot.forEach((docSnap) => {
+        loansList.push(docSnap.data() as LoanRequest);
+      });
+      onUpdate(loansList);
     },
     (err) => {
       handleFirestoreError(err, OperationType.GET, 'sarpras_loans');
@@ -167,7 +169,28 @@ export async function saveLoanToFirestore(loan: LoanRequest): Promise<void> {
   }
 }
 
-// Seed initial mock data into Firestore if collection is empty
+// Delete all documents in Firestore collections (to start empty)
+export async function clearAllFirestoreData(): Promise<void> {
+  try {
+    const itemsCol = collection(db, 'sarpras_items');
+    const loansCol = collection(db, 'sarpras_loans');
+
+    const [itemsSnap, loansSnap] = await Promise.all([
+      getDocs(itemsCol),
+      getDocs(loansCol),
+    ]);
+
+    const batch = writeBatch(db);
+    itemsSnap.forEach((docSnap) => batch.delete(docSnap.ref));
+    loansSnap.forEach((docSnap) => batch.delete(docSnap.ref));
+    await batch.commit();
+    console.log('Semua data Firestore berhasil dikosongkan.');
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, 'sarpras_collections_clear');
+  }
+}
+
+// Seed initial mock data into Firestore only when explicitly requested
 export async function seedInitialFirestoreData(
   items: SarprasItem[],
   loans: LoanRequest[]

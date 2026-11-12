@@ -210,7 +210,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             <div className="mt-3">
               <span className="text-[11px] text-slate-500 font-semibold block">Total Transaksi Selesai</span>
               <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                {completedLoansCount + 28} <span className="text-xs font-normal text-slate-400">riwayat</span>
+                {completedLoansCount} <span className="text-xs font-normal text-slate-400">riwayat</span>
               </span>
             </div>
           </div>
@@ -320,18 +320,36 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-xs font-medium">
-                  {filteredItems.slice(0, 7).map((item) => {
-                    const isSelected = selectedItemIds.includes(item.id);
-                    const isPartiallyLoaned = item.availableQuantity < item.totalQuantity && item.availableQuantity > 0;
-                    const isMaintenance = item.condition !== 'Baik';
+                  {filteredItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-slate-500">
+                        <Package className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                        <p className="font-bold text-slate-700">Belum ada data inventaris sarpras</p>
+                        <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                          Basis data kosong untuk diisi secara manual. Masuk sebagai Admin untuk mulai menambahkan barang atau ruangan.
+                        </p>
+                        <button
+                          onClick={() => onNavigateTab('inventory')}
+                          className="mt-3 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Tambah Aset Pertama</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredItems.slice(0, 7).map((item) => {
+                      const isSelected = selectedItemIds.includes(item.id);
+                      const isPartiallyLoaned = item.availableQuantity < item.totalQuantity && item.availableQuantity > 0;
+                      const isMaintenance = item.condition !== 'Baik';
 
-                    return (
-                      <tr
-                        key={item.id}
-                        className={`hover:bg-slate-50/80 transition-colors ${
-                          isSelected ? 'bg-blue-50/40' : ''
-                        }`}
-                      >
+                      return (
+                        <tr
+                          key={item.id}
+                          className={`hover:bg-slate-50/80 transition-colors ${
+                            isSelected ? 'bg-blue-50/40' : ''
+                          }`}
+                        >
                         <td className="py-3 px-4">
                           <input
                             type="checkbox"
@@ -405,7 +423,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         </td>
                       </tr>
                     );
-                  })}
+                  }))}
                 </tbody>
               </table>
             </div>
@@ -450,39 +468,45 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                       stroke="#f1f5f9"
                       strokeWidth="3.5"
                     />
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="14"
-                      fill="transparent"
-                      stroke="#10b981"
-                      strokeWidth="3.5"
-                      strokeDasharray="65 100"
-                      strokeDashoffset="0"
-                      strokeLinecap="round"
-                    />
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="14"
-                      fill="transparent"
-                      stroke="#f59e0b"
-                      strokeWidth="3.5"
-                      strokeDasharray="20 100"
-                      strokeDashoffset="-67"
-                      strokeLinecap="round"
-                    />
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="14"
-                      fill="transparent"
-                      stroke="#ef4444"
-                      strokeWidth="3.5"
-                      strokeDasharray="10 100"
-                      strokeDashoffset="-89"
-                      strokeLinecap="round"
-                    />
+                    {totalItemsCount > 0 && inStockCount > 0 && (
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="14"
+                        fill="transparent"
+                        stroke="#10b981"
+                        strokeWidth="3.5"
+                        strokeDasharray={`${Math.round((inStockCount / items.length) * 100)} 100`}
+                        strokeDashoffset="0"
+                        strokeLinecap="round"
+                      />
+                    )}
+                    {totalItemsCount > 0 && lowStockCount > 0 && (
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="14"
+                        fill="transparent"
+                        stroke="#f59e0b"
+                        strokeWidth="3.5"
+                        strokeDasharray={`${Math.round((lowStockCount / items.length) * 100)} 100`}
+                        strokeDashoffset={`-${Math.round((inStockCount / items.length) * 100)}`}
+                        strokeLinecap="round"
+                      />
+                    )}
+                    {totalItemsCount > 0 && outOfStockCount > 0 && (
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="14"
+                        fill="transparent"
+                        stroke="#ef4444"
+                        strokeWidth="3.5"
+                        strokeDasharray={`${Math.round((outOfStockCount / items.length) * 100)} 100`}
+                        strokeDashoffset={`-${Math.round(((inStockCount + lowStockCount) / items.length) * 100)}`}
+                        strokeLinecap="round"
+                      />
+                    )}
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                     <span className="text-lg font-black text-slate-900 leading-none">
@@ -501,21 +525,27 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                       <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                       <span className="text-slate-600 font-medium">In Stock</span>
                     </div>
-                    <span className="font-bold text-slate-900">{inStockCount} item (89%)</span>
+                    <span className="font-bold text-slate-900">
+                      {inStockCount} item ({items.length > 0 ? Math.round((inStockCount / items.length) * 100) : 0}%)
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                       <span className="text-slate-600 font-medium">Low Stock</span>
                     </div>
-                    <span className="font-bold text-slate-900">{lowStockCount} item (8%)</span>
+                    <span className="font-bold text-slate-900">
+                      {lowStockCount} item ({items.length > 0 ? Math.round((lowStockCount / items.length) * 100) : 0}%)
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
                       <span className="text-slate-600 font-medium">Out of Stock</span>
                     </div>
-                    <span className="font-bold text-slate-900">{outOfStockCount} item (3%)</span>
+                    <span className="font-bold text-slate-900">
+                      {outOfStockCount} item ({items.length > 0 ? Math.round((outOfStockCount / items.length) * 100) : 0}%)
+                    </span>
                   </div>
                 </div>
               </div>
@@ -535,42 +565,52 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               </div>
 
               <div className="space-y-3">
-                {loans.slice(0, 4).map((loan, idx) => (
-                  <div key={loan.id || idx} className="flex items-center gap-3 text-xs">
-                    <div
-                      className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                        idx === 0
-                          ? 'bg-blue-50 text-blue-600'
-                          : idx === 1
-                          ? 'bg-purple-50 text-purple-600'
-                          : idx === 2
-                          ? 'bg-emerald-50 text-emerald-600'
-                          : 'bg-amber-50 text-amber-600'
-                      }`}
-                    >
-                      {idx === 0 ? (
-                        <Package className="w-4 h-4" />
-                      ) : idx === 1 ? (
-                        <Clock className="w-4 h-4" />
-                      ) : idx === 2 ? (
-                        <CheckCircle2 className="w-4 h-4" />
-                      ) : (
-                        <Sparkles className="w-4 h-4" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-slate-800 truncate">
-                        {loan.borrowerName} • {loan.items[0]?.itemName || 'Sarpras'}
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-medium truncate">
-                        Kode: {loan.loanCode} • Status: {loan.status}
-                      </div>
-                    </div>
-                    <span className="text-[10px] text-slate-400 shrink-0">
-                      {idx === 0 ? '2 mins ago' : idx === 1 ? '12 mins ago' : `${idx * 20}m ago`}
-                    </span>
+                {loans.length === 0 ? (
+                  <div className="py-7 text-center text-slate-400 text-xs my-auto">
+                    <Clock className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                    <p className="font-bold text-slate-700">Belum ada aktivitas transaksi</p>
+                    <p className="text-[11px] text-slate-400 mt-1 max-w-xs mx-auto">
+                      Pengajuan peminjaman baru oleh guru atau staf akan tercatat otomatis di sini.
+                    </p>
                   </div>
-                ))}
+                ) : (
+                  loans.slice(0, 4).map((loan, idx) => (
+                    <div key={loan.id || idx} className="flex items-center gap-3 text-xs">
+                      <div
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                          idx === 0
+                            ? 'bg-blue-50 text-blue-600'
+                            : idx === 1
+                            ? 'bg-purple-50 text-purple-600'
+                            : idx === 2
+                            ? 'bg-emerald-50 text-emerald-600'
+                            : 'bg-amber-50 text-amber-600'
+                        }`}
+                      >
+                        {idx === 0 ? (
+                          <Package className="w-4 h-4" />
+                        ) : idx === 1 ? (
+                          <Clock className="w-4 h-4" />
+                        ) : idx === 2 ? (
+                          <CheckCircle2 className="w-4 h-4" />
+                        ) : (
+                          <Sparkles className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-slate-800 truncate">
+                          {loan.borrowerName} • {loan.items[0]?.itemName || 'Sarpras'}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium truncate">
+                          Kode: {loan.loanCode} • Status: {loan.status}
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-slate-400 shrink-0">
+                        {idx === 0 ? '2 mins ago' : idx === 1 ? '12 mins ago' : `${idx * 20}m ago`}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

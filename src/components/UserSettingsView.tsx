@@ -20,6 +20,7 @@ import {
   Cloud,
   Check,
   Flame,
+  Trash2,
 } from 'lucide-react';
 import {
   auth,
@@ -35,6 +36,8 @@ interface UserSettingsViewProps {
   onLogoutAdmin: () => void;
   onOpenChangePassword: () => void;
   onResetData: () => void;
+  onClearAllData?: () => void;
+  onSeedDemoData?: () => void;
   totalItems: number;
   totalLoans: number;
 }
@@ -45,6 +48,8 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({
   onLogoutAdmin,
   onOpenChangePassword,
   onResetData,
+  onClearAllData,
+  onSeedDemoData,
   totalItems,
   totalLoans,
 }) => {
@@ -201,7 +206,7 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({
             </p>
 
             <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200 text-[11px] text-slate-600 space-y-1 font-mono">
-              <div>Project: <strong className="text-slate-800">snappy-container-7rr5c</strong></div>
+              <div>Project: <strong className="text-slate-800">sarprashub-79e88</strong></div>
               <div>Database: <strong className="text-slate-800">Firestore (Auto)</strong></div>
             </div>
 
@@ -361,7 +366,7 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({
             <div className="space-y-2 pt-1">
               <button
                 onClick={handleExportBackup}
-                className="w-full py-2 px-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-2 px-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
               >
                 <Download className="w-4 h-4 text-blue-600" />
                 <span>Export Cadangan (JSON)</span>
@@ -369,14 +374,34 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({
 
               <button
                 onClick={() => {
-                  if (window.confirm('Apakah Anda yakin ingin mengatur ulang data kembali ke contoh awal? Semua perubahan data yang belum dicadangkan akan kembali ke default.')) {
-                    onResetData();
+                  if (window.confirm('PERINGATAN: Apakah Anda yakin ingin MENGOSONGKAN semua data inventaris dan permohonan peminjaman? Database akan menjadi kosong bersih agar Anda dapat mengisinya secara manual dari awal.')) {
+                    if (onClearAllData) {
+                      onClearAllData();
+                    } else {
+                      onResetData();
+                    }
                   }
                 }}
-                className="w-full py-2 px-3 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold border border-rose-200 flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                className="w-full py-2 px-3 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs"
               >
-                <RefreshCw className="w-4 h-4" />
-                <span>Reset Data ke Contoh Default</span>
+                <Trash2 className="w-4 h-4 text-rose-600" />
+                <span>Kosongkan Semua Data (Isi Manual)</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  if (window.confirm('Muat data contoh / demo sarpras sekolah? Data demo akan ditambahkan ke sistem.')) {
+                    if (onSeedDemoData) {
+                      onSeedDemoData();
+                    } else {
+                      onResetData();
+                    }
+                  }
+                }}
+                className="w-full py-2 px-3 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 text-xs font-semibold border border-slate-200 flex items-center justify-center gap-2 cursor-pointer transition-colors"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
+                <span>Muat Data Contoh / Demo</span>
               </button>
             </div>
           </div>
